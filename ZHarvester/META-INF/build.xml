@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="create_run_jar" name="Create Runnable Jar for Project ZHarvester">
     <!--ANT 1.7 is required-->
-	<property name="dir" location=".." />
-	<property name="lib" location="../ZHarvester_lib" />
-	<property name="dest" location="C:/Users/cuda/Desktop/2" /> <!-- Destination directory -->
-    <target name="create_run_jar">
+    <property name="dir" location=".." />
+    <property name="lib" location="../ZHarvester_lib" />
+    <property name="dest" location="../out" />
+    <!-- Destination directory -->
+    <target name="create_run_jar" depends="compile">
         <jar destfile="${dest}/ZHarvester.jar" filesetmanifest="mergewithoutmain">
             <manifest>
-                <attribute name="Main-Class" value="main.ZHarvester"/>
+                <attribute name="Main-Class" value="ru.umeta.zharvester.ZHarvester"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="${dir}/bin"/>
@@ -16,11 +17,21 @@
             <zipfileset excludes="META-INF/*.SF" src="${lib}/base-harvester.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${lib}/freelib-marc4j-2.6.6.jar"/>
         </jar>
-    	<copy todir="${dest}/libs">
-    		<fileset dir="${lib}">
-    			<exclude name="*.jar"/>
-    		</fileset>
-    	</copy>
-    	<mkdir dir="${dest}/results"/>
+        <copy todir="${dest}/libs">
+            <fileset dir="${lib}">
+                <exclude name="*.jar"/>
+            </fileset>
+        </copy>
+        <mkdir dir="${dest}/results"/>
     </target>
+    <target name="compile">
+        <javac destdir="${dir}/bin" srcdir="../src" target="1.7" source="1.7">
+            <classpath refid="classpath.base" />
+        </javac>
+    </target>
+    <path id="classpath.base">
+        <fileset dir="${lib}">
+            <include name="*.jar" />
+        </fileset>
+    </path> 
 </project>
