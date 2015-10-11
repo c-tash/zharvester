@@ -8,10 +8,7 @@ import org.yaz4j.Record;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 public class ResultsSaver {
@@ -32,6 +29,7 @@ public class ResultsSaver {
         }
         writer.close();
         byte[] bytes = out.toByteArray();
+
         try (FileOutputStream fileOutputStream = new FileOutputStream(dir)) {
             fileOutputStream.write(bytes);
         } catch (IOException e) {

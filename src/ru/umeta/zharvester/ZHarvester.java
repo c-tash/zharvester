@@ -12,6 +12,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.Date;
@@ -21,7 +22,8 @@ public class ZHarvester implements IHarvester {
 
     private static final String JAVA_LIBRARY_PATH = "java.library.path";
     private static final String JAVA_LIBRARY_PATTERN = System.getProperty(JAVA_LIBRARY_PATH) + ";{0}/libs";
-    private static final Query DEFAULT_QUERY = new Query("", "", "sirsi.library.utoronto.ca:2200/UNICORN", "", "", "", "", "", "", "", "save");
+    private static final Query DEFAULT_QUERY =
+            new Query("","","sru.gbv.de:80/gvk","","","UTF-8","1000","","eng","","save");
 
     @Override
     public int harvest(Query query) throws Exception {
@@ -34,6 +36,10 @@ public class ZHarvester implements IHarvester {
         else
             dir = dir.substring(1, dir.lastIndexOf("/"));
 
+        if (dir.endsWith("/bin")) {
+            dir = dir.substring(0, dir.lastIndexOf("/"));
+        }
+
         loadLibraries(dir);
 
         String encoding = null;
@@ -42,6 +48,7 @@ public class ZHarvester implements IHarvester {
         String resultsDir = dir + "/results";
         if (!query.getStartURL().equals(""))
             resultsDir = query.getStartURL();
+        new File(resultsDir).mkdirs();
         int num = 1000;
         if (!query.getReg().equals(""))
             num = Integer.parseInt(query.getReg()); //number of records in the collection
@@ -106,17 +113,17 @@ public class ZHarvester implements IHarvester {
                         }
                     }
                 }
-                try (FileWriter sw = new FileWriter(dir + "/info.txt", true)) {
-                    sw.write("Server: " + url + "\n");
-                    sw.write("Query: " + queryStr + "\n");
+                try (PrintWriter writer = new PrintWriter(dir + "/info.txt")) {
+                    writer.println("Server: " + url);
+                    writer.write("Query: " + queryStr);
                     if (res != 0)
-                        sw.write("Number of saved records: " + (numberOfRecords = res) + "\n");
+                        writer.write("Number of saved records: " + (numberOfRecords = res));
                     else
-                        sw.write("Number of records (not saved): " + (numberOfRecords = (int) ((resultSet == null) ? 0 : resultSet.getHitCount())) + "\n");
+                        writer.write("Number of records (not saved): " + (numberOfRecords = (int) ((resultSet == null) ? 0 : resultSet.getHitCount())));
                     if (query.getActive().equals("save"))
-                        sw.write("Used encoding: " + encoding + "\n");
-                    sw.write("Started: " + startDate + "\n");
-                    sw.write("Finished: " + (new Date()) + "\n\n");
+                        writer.write("Used encoding: " + encoding);
+                    writer.write("Started: " + startDate);
+                    writer.write("Finished: " + (new Date()));
                 }
 
             } catch (ZoomException ze) {
