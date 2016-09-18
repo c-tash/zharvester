@@ -50,13 +50,15 @@ public class ZHarvester implements IHarvester {
             resultsDir = query.getStartURL();
         new File(resultsDir).mkdirs();
         int num = 1000;
-        if (!query.getReg().equals(""))
+        if (!query.getReg().equals("") && query.getReg().equals(null))
             num = Integer.parseInt(query.getReg()); //number of records in the collection
+        System.out.println(query.getReg());
         if (!query.getTime().equals(""))
             encoding = query.getTime();
         int counter = 0;
         int res = 0;
         int numberOfRecords = 0;
+        int hash = query.hashCode();
         boolean noResult = true;
         try (Connection con = new Connection(url, 0)) {
             Source stylesheet = new StreamSource(new File(dir + "/libs/MARC21slim2MODS3-5.xsl"));
@@ -90,40 +92,50 @@ public class ZHarvester implements IHarvester {
                     }
                 } while (noResult);
                 if (query.getActive().equals("save")) {
-                    if (resultSet != null && (numberOfRecords = (int) resultSet.getHitCount()) > 0 && resultSet.getRecord(0) != null && resultSet.getRecord(0).getSyntax() != null && (resultSet.getRecord(0).getSyntax().equalsIgnoreCase("usmarc")
-                            || resultSet.getRecord(0).getSyntax().equalsIgnoreCase("marc21"))) {
-                        int i = 0;
-                        while (((encoding == null && i < resultSet.getHitCount()) || (i < resultSet.getHitCount() && !encoding.equals("ISO-8859-7") && !encoding.equals("ISO-8859-1")
-                                && !encoding.equals("KOI8-R") && !encoding.equals("WINDOWS-1251") && !encoding.equals("GB18030") && !encoding.equals("WINDOWS-1252") && !encoding.equals("UTF-8"))) && i < 15) {
-                            encoding = EncodingUtils.detect(resultSet.getRecord(i).getContent());
-                            i++;
-                        }
-                        if (encoding == null)
-                            encoding = "KOI8-R";
-
-                        List<Record> lst = null;
-                        for (int k = 0; k < resultSet.getHitCount(); k += num) {
-                            if (resultSet.getHitCount() - k >= num)
-                                lst = resultSet.getRecords(k, num); //get num records starting from k
-                            else {
-                                i = (int) resultSet.getHitCount() - k;
-                                lst = resultSet.getRecords(k, i);
+                    if(SQLiteJDBC.db_check(hash, resultsDir))
+                    {
+                        System.out.println("Not in cache. Downloading.");
+                        if (resultSet != null && (numberOfRecords = (int) resultSet.getHitCount()) > 0 && resultSet.getRecord(0) != null && resultSet.getRecord(0).getSyntax() != null && (resultSet.getRecord(0).getSyntax().equalsIgnoreCase("usmarc")
+                                || resultSet.getRecord(0).getSyntax().equalsIgnoreCase("marc21"))) {
+                            int i = 0;
+                            while (((encoding == null && i < resultSet.getHitCount()) || (i < resultSet.getHitCount() && !encoding.equals("ISO-8859-7") && !encoding.equals("ISO-8859-1")
+                                    && !encoding.equals("KOI8-R") && !encoding.equals("WINDOWS-1251") && !encoding.equals("GB18030") && !encoding.equals("WINDOWS-1252") && !encoding.equals("UTF-8"))) && i < 15) {
+                                encoding = EncodingUtils.detect(resultSet.getRecord(i).getContent());
+                                i++;
                             }
-                            res += ResultsSaver.save(lst, resultsDir + "/" + (k / num) + ".xml", encoding, stylesheet);
+                            if (encoding == null)
+                                encoding = "KOI8-R";
+
+                            List<Record> lst = null;
+                            for (int k = 0; k < resultSet.getHitCount(); k += num) {
+                                if (resultSet.getHitCount() - k >= num)
+                                    lst = resultSet.getRecords(k, num); //get num records starting from k
+                                else {
+                                    i = (int) resultSet.getHitCount() - k;
+                                    lst = resultSet.getRecords(k, i);
+                                }
+                                res += ResultsSaver.save(lst, resultsDir + "/" + hash + " " + (k / num) + ".xml", encoding, stylesheet);
+                            }
                         }
                     }
-                }
-                try (PrintWriter writer = new PrintWriter(dir + "/info.txt")) {
-                    writer.println("Server: " + url);
-                    writer.write("Query: " + queryStr);
-                    if (res != 0)
-                        writer.write("Number of saved records: " + (numberOfRecords = res));
                     else
-                        writer.write("Number of records (not saved): " + (numberOfRecords = (int) ((resultSet == null) ? 0 : resultSet.getHitCount())));
+                        System.out.println("Found in cache. Skipping download.");
+                }
+
+                System.out.println("Hash: " + hash);
+
+                try (PrintWriter writer = new PrintWriter(dir + "/info.txt")) {
+                    writer.println("Hash: " + hash);
+                    writer.println("Server: " + url);
+                    writer.write("Query: " + queryStr + "\n");
+                    if (res != 0)
+                        writer.write("Number of saved records: " + (numberOfRecords = res) + "\n");
+                    else
+                        writer.write("Number of records: " + (numberOfRecords = (int) ((resultSet == null) ? 0 : resultSet.getHitCount())) + "\n");
                     if (query.getActive().equals("save"))
-                        writer.write("Used encoding: " + encoding);
-                    writer.write("Started: " + startDate);
-                    writer.write("Finished: " + (new Date()));
+                        writer.write("Used encoding: " + encoding + "\n");
+                    writer.write("Started: " + startDate + "\n");
+                    writer.write("Finished: " + (new Date()) + "\n");
                 }
 
             } catch (ZoomException ze) {
@@ -149,7 +161,10 @@ public class ZHarvester implements IHarvester {
 
     public static void main(String[] args) throws Exception {
         if (args.length > 0) {
-            System.out.println(new ZHarvester().harvest(new Query("", "", args[0], "", "", "", "", "", "", "", "save")));
+            if (args.length == 2)
+                System.out.println(new ZHarvester().harvest(new NewQuery("", "", args[0], "", "", "", args[1], "", "", "", "save")));
+            else if (args.length == 1)
+                System.out.println(new ZHarvester().harvest(new NewQuery("", "", args[0], "", "", "", "", "", "", "", "save")));
         } else {
             System.out.println(new ZHarvester().harvest(DEFAULT_QUERY));
         }    
