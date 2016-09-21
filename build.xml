@@ -11,11 +11,11 @@
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="bin"/>
-            <zipfileset excludes="META-INF/*.SF" src="${libs}/juniversalchardet-1.0.3.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="${libs}/yaz4j-any-1.4.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="${libs}/base-harvester.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${libs}/juniversalchardet-1.0.3.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${libs}/yaz4j-any-1.4.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${libs}/base-harvester.jar"/>
 			<zipfileset excludes="META-INF/*.SF" src="${libs}/sqlite-jdbc-3.8.11.2.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="${libs}/freelib-marc4j-2.6.6.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${libs}/freelib-marc4j-2.6.6.jar"/>
         </jar>
         <copy todir="${dest}/libs">
             <fileset dir="${libs}">

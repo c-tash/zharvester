@@ -50,7 +50,7 @@ public class ZHarvester implements IHarvester {
             resultsDir = query.getStartURL();
         new File(resultsDir).mkdirs();
         int num = 1000;
-        if (!query.getReg().equals("") && query.getReg().equals(null))
+        if (query.getReg() == null && !query.getReg().equals(""))
             num = Integer.parseInt(query.getReg()); //number of records in the collection
         System.out.println(query.getReg());
         if (!query.getTime().equals(""))
