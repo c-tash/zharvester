@@ -5,36 +5,44 @@ import java.sql.*;
 public class SQLiteJDBC{
 
     public static boolean db_check(Integer hash, String location) {
-        
-        boolean not_in_cache = true;
 
-        String sql_table = "CREATE TABLE IF NOT EXISTS CACHE " +
-                "(ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ," +
-                " HASH           INT NOT NULL, " +
-                " LOCATION       CHAR(100) NOT NULL)";
+        boolean NotInCache = true;
 
-        String sql_insert = "INSERT INTO CACHE (HASH, LOCATION) " +
-                "VALUES (" + hash.toString() + ", '" + location + "');";
+        try(Connection Con = DriverManager.getConnection("jdbc:sqlite:cache.db")) {
 
-        try(Connection c = DriverManager.getConnection("jdbc:sqlite:test.db");
-            Statement stmt = c.createStatement()) {
+            PreparedStatement SqlTable = Con.prepareStatement(
+                    "CREATE TABLE IF NOT EXISTS CACHE " +
+                            "(ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL ," +
+                            " HASH           INT NOT NULL, " +
+                            " LOCATION       CHAR(100) NOT NULL);");
 
             Class.forName("org.sqlite.JDBC");
-            stmt.executeUpdate(sql_table);
+            SqlTable.executeUpdate();
+            
+            PreparedStatement SqlInsert = Con.prepareStatement(
+                    "INSERT INTO CACHE (HASH, LOCATION) " +
+                            "VALUES (? , ?);");
 
-            ResultSet rs = stmt.executeQuery( "SELECT HASH FROM CACHE WHERE HASH = " + hash + ";" );
+            PreparedStatement SqlSelect = Con.prepareStatement(
+                    "SELECT HASH FROM CACHE WHERE HASH = ?;" );
+
+            SqlInsert.setInt(1,hash);
+            SqlInsert.setString(2,"'"+location+"'");
+            SqlSelect.setInt(1,hash);
+            
+            ResultSet rs = SqlSelect.executeQuery();
             if(!rs.isClosed())
-                not_in_cache = false;
+                NotInCache = false;
             rs.close();
 
-            if(not_in_cache == true) {
-                stmt.executeUpdate(sql_insert);
+            if(NotInCache == true) {
+                SqlInsert.executeUpdate();
             }
 
         } catch ( Exception e ) {
             e.printStackTrace();
             System.exit(0);
         }
-        return not_in_cache;
+        return NotInCache;
     }
 }
