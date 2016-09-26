@@ -175,11 +175,11 @@ voyager.uregina.ca:7090/Voyager - 4213
 nemesis.kent.ac.uk:7090/voyager - 864
 library.wur.nl:210/catalog - 1980
 voyager.arts.ac.uk:7090/voyager - 839
-voyager.library.uvic.ca:7090/voyager - 5534
+voyager.library.uvic.ca:7090/voyager - 1582
 acorn.library.vanderbilt.edu:2200/unicorn - 6274
 library.vu.edu.au:210/INNOPAC - 500
 195.215.203.98:2100/S - 882
-acorn.library.vanderbilt.edu:2200/ACORN - 6274
+acorn.library.vanderbilt.edu:2200/ACORN - 6274   -
 opac.ruslan.ru:210/etu - 46933
 opac.ruslan.ru:210/kalgu - 89666
 opac.ruslan.ru:210/lenobl - 28174

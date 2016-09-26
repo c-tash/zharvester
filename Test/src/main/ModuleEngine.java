@@ -36,7 +36,7 @@ public class ModuleEngine {
 	 *Struct_loc - язык для поиска данных, например, rus или eng (по умолчанию все языки)
 	 *Time - кодировка, если известна, иначе CharsetDetector будет распозновать */
     public static void main(String[] args){
-		Query q = new Query("","","opac.ruslan.ru:210/lounb","C:/Users/Vladimir/Desktop/harvester/results","","UTF-8","1000","","ru","","save");
+		Query q = new Query("","","z3950.lib.vsu.ru:210/gender","C:/Users/Vladimir/Desktop/harvester/results","","UTF-8","1000","","ru","","save");
 		System.out.println(executeClassMethod("C:/Users/Vladimir/Desktop/harvester/zharvester-master/out/ZHarvester.jar", "main.ZHarvester", q));
     }
 }
