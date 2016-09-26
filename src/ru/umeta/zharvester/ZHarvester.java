@@ -92,7 +92,7 @@ public class ZHarvester implements IHarvester {
                     }
                 } while (noResult);
                 if (query.getActive().equals("save")) {
-                    if(SQLiteJDBC.db_check(hash, resultsDir))
+                    if(SQLiteJDBC.dbCheck(hash, resultsDir))
                     {
                         System.out.println("Not in cache. Downloading.");
                         if (resultSet != null && (numberOfRecords = (int) resultSet.getHitCount()) > 0 && resultSet.getRecord(0) != null && resultSet.getRecord(0).getSyntax() != null && (resultSet.getRecord(0).getSyntax().equalsIgnoreCase("usmarc")
