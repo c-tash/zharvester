@@ -27,9 +27,11 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
-jar {
-    from { configurations.compile.collect { it } }
+task createRunnable(type: copy, depends: ':jar') {
+    from 'build/libs' into 'out'
+    from {configurations.dlls.collect {it} } into
+}
 
-    from { configurations.dlls.collect { it } }
-    into 'out/libs'
+jar {
+    from { configurations.compile.collect { zipTree(dir: it, exclude: 'META-INF/*.SF') } }
 }
