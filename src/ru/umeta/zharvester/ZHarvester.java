@@ -18,6 +18,8 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.List;
 
+import static ru.umeta.zharvester.HttpClientSend.dataSend;
+
 public class ZHarvester implements IHarvester {
 
     private static final String JAVA_LIBRARY_PATH = "java.library.path";
@@ -50,7 +52,7 @@ public class ZHarvester implements IHarvester {
             resultsDir = query.getStartURL();
         new File(resultsDir).mkdirs();
         int num = 1000;
-        if (query.getReg() != null && !query.getReg().equals(""))
+        if (!query.getReg().equals(""))
             num = Integer.parseInt(query.getReg()); //number of records in the collection
         System.out.println(query.getReg());
         if (!query.getTime().equals(""))
@@ -58,6 +60,7 @@ public class ZHarvester implements IHarvester {
         int counter = 0;
         int res = 0;
         int numberOfRecords = 0;
+        int totalFiles = 0;
         int hash = query.hashCode();
         boolean noResult = true;
         try (Connection con = new Connection(url, 0)) {
@@ -107,6 +110,8 @@ public class ZHarvester implements IHarvester {
                                 encoding = "KOI8-R";
 
                             List<Record> lst = null;
+                            totalFiles = numberOfRecords/num + 1;
+                            int fileNum = 1;
                             for (int k = 0; k < resultSet.getHitCount(); k += num) {
                                 if (resultSet.getHitCount() - k >= num)
                                     lst = resultSet.getRecords(k, num); //get num records starting from k
@@ -114,15 +119,29 @@ public class ZHarvester implements IHarvester {
                                     i = (int) resultSet.getHitCount() - k;
                                     lst = resultSet.getRecords(k, i);
                                 }
-                                res += ResultsSaver.save(lst, resultsDir + "/" + hash + " " + (k / num) + ".xml", encoding, stylesheet);
+                                res += ResultsSaver.save(lst, resultsDir + "/" + hash + " " + ((k / num)+1) + ".xml", encoding, stylesheet);
+                                System.out.println(fileNum + " of " + totalFiles + " files created");
+                                fileNum +=1;
                             }
                         }
                     }
-                    else
+                    else {
                         System.out.println("Found in cache. Skipping download.");
+                        numberOfRecords = (int) resultSet.getHitCount();
+                        totalFiles = numberOfRecords/num + 1;
+                    }
                 }
 
                 System.out.println("Hash: " + hash);
+                System.out.println("Total files: " + totalFiles);
+                System.out.println("Total records: " + numberOfRecords);
+
+                System.out.println("Sending...");
+                for (int fnum = 1; fnum <= totalFiles; fnum += 1) {
+                    dataSend(resultsDir + "/" + hash + " " + fnum + ".xml");
+                }
+                System.out.println("Sending finished");
+
 
                 try (PrintWriter writer = new PrintWriter(dir + "/info.txt")) {
                     writer.println("Hash: " + hash);
@@ -142,10 +161,10 @@ public class ZHarvester implements IHarvester {
                 try (FileWriter err = new FileWriter(dir + "/errors.txt", true)) {
                     err.write((new Date()) + "\n" + ze.getMessage());
                 }
-                return 1;
+                return -1;
             }
         }
-        return java.lang.Math.max(4, numberOfRecords);
+        return java.lang.Math.max(0, numberOfRecords);
     }
 
     private void loadLibraries(String dir) throws NoSuchFieldException, IllegalAccessException {
@@ -160,12 +179,19 @@ public class ZHarvester implements IHarvester {
     }
 
     public static void main(String[] args) throws Exception {
+        int result = 0;
         if (args.length > 0) {
             if (args.length == 2)
-                System.out.println(new ZHarvester().harvest(new NewQuery("", "", args[0], "", "", "", args[1], "", "", "", "save")));
+                result = new ZHarvester().harvest(new NewQuery("", "", args[0], "", "", "", args[1], "", "", "", "save"));
             else if (args.length == 1)
-                System.out.println(new ZHarvester().harvest(new NewQuery("", "", args[0], "", "", "", "", "", "", "", "save")));
-        } else {
+                result = new ZHarvester().harvest(new NewQuery("", "", args[0], "", "", "", "", "", "", "", "save"));
+
+            if(result == -1)
+                    System.out.println("Error!");
+            else
+                System.out.println("Process finished");
+            }
+         else {
             System.out.println(new ZHarvester().harvest(DEFAULT_QUERY));
         }    
         
